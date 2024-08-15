@@ -33,6 +33,9 @@ func doOneOf(message interface{}) {
 		fmt.Printf("This is an Id: %d\n", message.(*pb.Result_Id).Id)
 	case *pb.Result_Message:
 		fmt.Printf("This is a message: %s\n", message.(*pb.Result_Message).Message)
+	case *pb.Result_ComplexMsg:
+		fmt.Printf("This is a complexMsg: %s\n", message.(*pb.Result_ComplexMsg))
+		fmt.Println(reflect.TypeOf(message))
 	default:
 		fmt.Printf("message has unexpected type: %T\n", x)
 	}
@@ -51,8 +54,8 @@ func doMap() *pb.MapExample {
 
 func doEnum() *pb.Enumeration {
 	return &pb.Enumeration{
-		EyeColor: pb.EyeColor_EYE_COLOR_GREEN,
-		//EyeColor: 1,
+		// EyeColor: pb.EyeColor_EYE_COLOR_GREEN,
+		EyeColor: 0,
 	}
 }
 
@@ -72,14 +75,34 @@ func doFromJSON(jsonString string, t reflect.Type) proto.Message {
 }
 
 func main() {
-	fmt.Println(doSimple())
+	// fmt.Println(doSimple())
 	// fmt.Println(doComplex())
-	// fmt.Println(doEnum())
+	tmp := doEnum().ProtoReflect()
+	fmt.Println(tmp.Descriptor().Fields())
+	// fmt.Println(doEnum().EyeColor.Descriptor(), "-", doEnum().EyeColor.Enum(), "-", doEnum().ProtoReflect())
 	// doOneOf(&pb.Result_Id{Id: 42})
 	// doOneOf(&pb.Result_Message{Message: "My name"})
+	// doOneOf(&pb.Result_ComplexMsg{ComplexMsg: &pb.Complex{
+	// 	OneDummy: &pb.Dummy{
+	// 		Id:   1,
+	// 		Name: "dummy1",
+	// 	},
+	// }})
+	doOneOf(&pb.Result_ComplexMsg{ComplexMsg: &pb.Complex{
+		MultipleDummies: []*pb.Dummy{
+			&pb.Dummy{
+				Id:   1,
+				Name: "dummy1",
+			},
+			&pb.Dummy{
+				Id:   2,
+				Name: "dummy2",
+			},
+		},
+	}})
 	// fmt.Println(doMap())
 	// doFile(doSimple())
 	// fmt.Println(doFromJSON(toJSON(doSimple()), reflect.TypeOf(pb.Simple{})))
-	// fmt.Println(doFromJSON(toJSON(doComplex()), reflect.TypeOf(pb.Complex{})))
+	fmt.Println(doFromJSON(toJSON(doComplex()), reflect.TypeOf(pb.Complex{})))
 	// fmt.Println(doFromJSON(`{"id": 42, "unknown": "test"}`, reflect.TypeOf(pb.Simple{})))
 }
